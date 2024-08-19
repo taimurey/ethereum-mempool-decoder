@@ -8,6 +8,9 @@ use log::{error, info};
 lazy_static::lazy_static! {
     pub static ref TARGET_POOL_ABI: String = fs::read_to_string("./Pool/WBTC-ETH.json")
         .expect("Unable to read Uniswap V2 Router ABI file");
+
+    pub static ref UNIVERSAL_ROUTER_ABI: String = fs::read_to_string("./uniswap/UniswapUniversal.json")
+        .expect("Unable to read Uniswap V2 Router ABI file");
 }
 
 pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
@@ -17,7 +20,8 @@ pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
     }
 
     // Load the contract ABI
-    let contract = Contract::load(TARGET_POOL_ABI.as_bytes())?;
+    let pool_contract = Contract::load(TARGET_POOL_ABI.as_bytes())?;
+    let universal_contract = Contract::load(UNIVERSAL_ROUTER_ABI.as_bytes())?;
 
     // Extract the first 4 bytes of the input as the function signature
     let signature = &input[0..4];
@@ -31,7 +35,8 @@ pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
         None => return Err("Function not found".into()),
     };
 
-    let function = contract.function(*function_name)?;
+    let function = pool_contract.function(*function_name)?;
+    let function = universal_contract.function(*function_name)?;
 
     // Extract the input data, skipping the first 4 bytes (signature)
     let data = &input[4..];

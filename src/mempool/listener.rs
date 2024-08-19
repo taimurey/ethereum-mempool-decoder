@@ -64,12 +64,14 @@ pub async fn mempool_listener(config: Settings) -> Result<(), Box<dyn std::error
     while let Some(transaction_hash) = stream.next().await {
         let http_provider = Arc::clone(&http_provider);
         let uniswap_v3_router_contract = Arc::clone(&uniswap_v3_router_contract);
-
+        let hash =
+            H256::from_str("0xb2e3aa70166d1b874afb486e789763439eebb1aa756d2bb13020e6e8e4dcd21d")
+                .unwrap();
         tokio::task::spawn(async move {
-            if let Ok(transaction_option) = http_provider.get_transaction(transaction_hash).await {
+            if let Ok(transaction_option) = http_provider.get_transaction(hash).await {
                 if let Some(transaction) = transaction_option {
                     if let Some(transaction_to) = transaction.to {
-                        // println!("Transaction: {:#?}", transaction.input);
+                        println!("Transaction: {:#?}", transaction.input);
                         let _ = match input_decoder(transaction.input).await {
                             Ok(_) => (),
                             Err(e) => error!("Error decoding transaction input: {:?}", e),
