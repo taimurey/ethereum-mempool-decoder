@@ -16,7 +16,7 @@ lazy_static::lazy_static! {
 pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
     // Ensure the input is long enough to contain the function signature
     if input.len() < 4 {
-        return Err("Input is too short to contain a valid function signature.".into());
+        return Ok(());
     }
 
     // Load the contract ABI
@@ -32,11 +32,14 @@ pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
     // If you have a mapping, use it here to find the function name
     let function_name = match UNIVERSAL_FUNCTION_MAPPING.get(signature) {
         Some(name) => name,
-        None => return Err("Function not found".into()),
+        None => return Ok(()),
     };
 
-    let function = pool_contract.function(*function_name)?;
-    let function = universal_contract.function(*function_name)?;
+    let function = match *function_name {
+        "mixSwap" => pool_contract.function(function_name)?,
+        "execute" => universal_contract.function(function_name)?,
+        _ => return Ok(()),
+    };
 
     // Extract the input data, skipping the first 4 bytes (signature)
     let data = &input[4..];
