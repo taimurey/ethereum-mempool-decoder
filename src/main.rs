@@ -9,6 +9,7 @@ use uniswap_v3_mev::{mempool::listener::mempool_listener, types::settings::Setti
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::env_logger::builder()
         .filter_level(log::LevelFilter::Info)
+        .filter_module("ethers_providers", log::LevelFilter::Warn)
         .format(|f, record| {
             let level = record.level();
             let color = match level {
@@ -22,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut style = f.style();
             style.set_color(color).set_bold(true);
 
-            let timestamp = Local::now().format("%I:%M:%S %p");
+            let timestamp = Local::now().format("%I:%M:%S%.3f %p");
 
             writeln!(
                 f,
@@ -34,7 +35,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
         })
         .init();
-
     // Use new() for reading the settings from config.toml file and read_config for creating and reading the settings from the config.json file
     let settings = Settings::new()?;
     info!("{:#?}", settings);
