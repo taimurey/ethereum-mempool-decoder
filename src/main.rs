@@ -1,8 +1,8 @@
 use chrono::Local;
 use colored::Colorize;
-use log::{error, info, Record};
+use log::{error, info};
 use pretty_env_logger::env_logger::fmt::Color;
-use std::{default, io::Write};
+use std::io::Write;
 use uniswap_v3_mev::{mempool::listener::mempool_listener, types::settings::Settings};
 
 #[tokio::main]

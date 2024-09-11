@@ -23,7 +23,7 @@ builders_url = [
 ]
 
 [contract]
-address = "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640"
+address = "0xD7CFDb3cdc33dBeb9e9A4C95b61953Cf12A008b3"
 uniswap_v2_router = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 uniswap_v3_router = "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD"
 weth = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"

@@ -21,6 +21,8 @@ lazy_static::lazy_static! {
         m.insert([0x2e, 0x0a, 0x9e, 0x96], "exactInputSingle");
         m.insert([0x8b, 0x53, 0xb4, 0x36], "exactOutput");
         m.insert([0xd9, 0xc1, 0xad, 0xed], "exactOutputSingle");
+
+        m.insert([4, 228, 90, 175], "exactInputSingle");
         m.insert([48, 26, 55, 32], "mixSwap");
         m.insert([53, 147, 86, 76], "execute");
 
