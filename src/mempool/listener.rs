@@ -47,9 +47,6 @@ pub async fn mempool_listener(config: Settings) -> Result<(), Box<dyn std::error
     while let Some(transaction_hash) = stream.next().await {
         let http_provider = Arc::clone(&http_provider);
 
-        // let transaction_hash =
-        //     H256::from_str("0x4c35ca9cc4b7624c02f3ffa8862175582dee982ceb0c44a094e2dd346c5196b4")?;
-
         tokio::task::spawn(async move {
             if let Ok(transaction_option) = http_provider.get_transaction(transaction_hash).await {
                 if let Some(transaction) = transaction_option {

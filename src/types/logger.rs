@@ -42,20 +42,32 @@ pub fn log_decoded_input(function_name: &str, input_data: &str) {
 
     println!("\n{}", header);
 
-    if let Some((param_type, value)) = input_data.split_once(' ') {
+    if function_name == "multicall" {
+        println!("  {}", "multicall".yellow());
+        let calls: Vec<&str> = input_data.split("], [").collect();
+        for (i, call) in calls.iter().enumerate() {
+            println!("    Call {}:", i + 1);
+            let parts: Vec<&str> = call
+                .trim_matches(|c| c == '[' || c == ']' || c == '(' || c == ')')
+                .split(", ")
+                .collect();
+            if parts.len() >= 2 {
+                println!("      {}: {}", "target".yellow(), parts[0].bright_green());
+                println!(
+                    "      {}: {}",
+                    "callData".yellow(),
+                    format!("0x{}...", &parts[1][2..8]).bright_green()
+                );
+            }
+        }
+    } else if let Some((param_type, value)) = input_data.split_once(' ') {
         let formatted_type = format!("{}", param_type).yellow();
         println!("  {}", formatted_type);
 
         if param_type.starts_with("(") {
             // For tuples, split the content and display each item on a new line
-            let items = value
-                .trim_start_matches('(')
-                .trim_end_matches(')')
-                .split(',');
-            let types = param_type
-                .trim_start_matches('(')
-                .trim_end_matches(')')
-                .split(',');
+            let items = value.trim_matches(|c| c == '(' || c == ')').split(',');
+            let types = param_type.trim_matches(|c| c == '(' || c == ')').split(',');
 
             for (item_type, item_value) in types.zip(items) {
                 let formatted_item_type = format!("    {:<15}", item_type.trim()).yellow();

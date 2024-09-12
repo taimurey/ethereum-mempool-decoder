@@ -37,6 +37,7 @@ pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
         "mixSwap" => pool_contract.function(function_name)?,
         "execute" => universal_contract.function(function_name)?,
         "exactInputSingle" => uniswap_v3_router_2.function(function_name)?,
+        "multicall" => uniswap_v3_router_2.function(function_name)?,
         _ => return Ok(()),
     };
 
