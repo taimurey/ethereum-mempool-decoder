@@ -26,7 +26,6 @@ pub async fn mempool_listener(config: Settings) -> Result<(), Box<dyn std::error
     let provider = Arc::new(Provider::new(ws).interval(Duration::from_millis(10)));
     let http_provider = Arc::new(Provider::new(connection).interval(Duration::from_millis(100)));
 
-    // Prefix unused variables with an underscore
     let _uniswap_v3_router: Address = H160::from_str(&config.contract.uniswap_v3_router)
         .unwrap()
         .into();
@@ -42,8 +41,7 @@ pub async fn mempool_listener(config: Settings) -> Result<(), Box<dyn std::error
             process::exit(1);
         }
     };
-    // handle.join().unwrap();
-    // stop_animation.store(true, Ordering::Relaxed);
+
     while let Some(transaction_hash) = stream.next().await {
         let http_provider = Arc::clone(&http_provider);
 
@@ -51,18 +49,12 @@ pub async fn mempool_listener(config: Settings) -> Result<(), Box<dyn std::error
             if let Ok(transaction_option) = http_provider.get_transaction(transaction_hash).await {
                 if let Some(transaction) = transaction_option {
                     if let Some(_transaction_to) = transaction.to {
-                        match input_decoder(transaction.input).await {
+                        match input_decoder(transaction.input) {
                             Ok(s) => s,
                             Err(_) => {
                                 return;
                             }
                         }
-
-                        // if input.contains(&pool_address_str_clone) {
-                        //     info!("Hash: {:?}", transaction.hash);
-                        //     info!("Nonce: {:?}", transaction.nonce);
-                        //     info!("From: {:?}", transaction.from);
-                        // }
                     }
                 }
             }

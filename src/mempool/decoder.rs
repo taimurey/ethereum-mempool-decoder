@@ -3,6 +3,8 @@ use std::{error::Error, fs};
 use crate::types::logger::{log_decoded_input, token_to_string};
 
 use super::utils::UNIVERSAL_FUNCTION_MAPPING;
+use chrono::Local;
+use colored::Colorize;
 use ethabi::Contract;
 use ethers::types::Bytes;
 
@@ -17,13 +19,12 @@ lazy_static::lazy_static! {
         .expect("Unable to read Uniswap V3 Router ABI file");
 }
 
-pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
+pub fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
     if input.len() < 4 {
         return Ok(());
     }
 
     let pool_contract = Contract::load(TARGET_POOL_ABI.as_bytes())?;
-    let universal_contract = Contract::load(UNIVERSAL_ROUTER_ABI.as_bytes())?;
     let uniswap_v3_router_2 = Contract::load(UNISWAP_V3_ROUTER_V2.as_bytes())?;
 
     let signature = &input[0..4];
@@ -35,7 +36,6 @@ pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
 
     let function = match *function_name {
         "mixSwap" => pool_contract.function(function_name)?,
-        "execute" => universal_contract.function(function_name)?,
         "exactInputSingle" => uniswap_v3_router_2.function(function_name)?,
         "multicall" => uniswap_v3_router_2.function(function_name)?,
         _ => return Ok(()),
@@ -54,11 +54,47 @@ pub async fn input_decoder(input: Bytes) -> Result<(), Box<dyn Error>> {
     let result = types
         .iter()
         .zip(tokens.iter())
-        .map(|(ty, to)| format!("{} {}", ty.kind, token_to_string(to)))
+        .map(|(ty, to)| {
+            let token_str = token_to_string(to);
+            if *function_name == "multicall" && ty.kind.to_string() == "bytes[]" {
+                let inner_calls: Vec<Bytes> = to
+                    .clone()
+                    .into_array()
+                    .unwrap()
+                    .into_iter()
+                    .map(|v| v.into_bytes().unwrap())
+                    .map(Bytes::from)
+                    .collect();
+
+                let timestamp = Local::now().format("%H:%M:%S%.3f").to_string();
+                let header =
+                    format!("{} ⮞ Decoded input for {}:", timestamp, function_name).bright_blue();
+                println!("\n{}", header);
+                println!("  {}", "multicall".yellow());
+
+                let mut inner_results = Vec::new();
+                for (index, inner_call) in inner_calls.into_iter().enumerate() {
+                    println!("  Call {}:", index + 1);
+                    if let Err(e) = input_decoder(inner_call.clone()) {
+                        inner_results.push(format!("    Error decoding inner call: {}", e));
+                    }
+                }
+                format!(
+                    "{} {}\nInner calls:\n{}",
+                    ty.kind,
+                    token_str,
+                    inner_results.join("\n")
+                )
+            } else {
+                format!("{} {}", ty.kind, token_str)
+            }
+        })
         .collect::<Vec<String>>()
         .join("\n");
 
-    log_decoded_input(function_name, &result);
+    if function_name != &"multicall" {
+        log_decoded_input(function_name, &result);
+    }
 
     Ok(())
 }
